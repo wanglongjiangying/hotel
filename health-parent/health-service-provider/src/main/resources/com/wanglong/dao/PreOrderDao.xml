@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wanglong.dao.PreOrderDao">
+
+    <resultMap id="preOrderMap" type="com.wanglong.pojo.PreOrder">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="idCard" column="id_card"/>
+        <result property="mobile" column="mobile"/>
+        <result property="status" column="status"/>
+        <result property="arriveDate" column="arrive_date"/>
+        <result property="leaveDate" column="leave_date"/>
+        <result property="createTime" column="create_time"/>
+        <result property="remark" column="remark"/>
+
+        <association  property="roomType"
+                      javaType="com.wanglong.pojo.RoomType"
+                      select="com.wanglong.dao.RoomTypeDao.findById"
+                      column="room_type_id">
+        </association>
+        <association  property="account"
+                      javaType="com.wanglong.pojo.Account"
+                      select="com.wanglong.dao.AccountDao.findById"
+                      column="account_id">
+        </association>
+    </resultMap>
+
+    <select id="findPreOrderByPage" parameterType="Map" resultMap="preOrderMap">
+        select * from t_pre_order
+        <where>
+            <if test="status !=null">
+                status = #{status}
+            </if>
+            <if test="queryString !=null and queryString.length>0">
+                and  username like '%${queryString}%' or realName like '%${queryString}%'
+                or idCard = #{queryString} or mobile = #{queryString}
+            </if>
+            <if test="startTime!=null and endTime!=null">
+                create_time between #{startTime} and #{endTime}
+            </if>
+        </where>
+
+    </select>
+
+
+
+<!--    <insert id="add" parameterType="com.wanglong.pojo.Room">-->
+<!--       insert into t_room (code,photo,floor_id,roomType_id,status,remark,price)-->
+<!--       values(#{code},#{photo},#{floor.id},#{roomType.id},#{status},#{remark},#{price})-->
+<!--    </insert>-->
+
+<!--    <delete id="deleteById" parameterType="int">-->
+<!--        delete from t_room where id=#{id}-->
+<!--    </delete>-->
+
+
+<!--    <update id="updateRoom" parameterType="com.wanglong.pojo.Room">-->
+<!--         		update t_room set-->
+<!--         		/*这里是基本数据*/-->
+<!--         		code = #{code},photo = #{photo}, price = #{price},-->
+<!--         		floor_id = #{floor.id},roomType_id = #{roomType.id},-->
+<!--         		status = #{status},remark = #{remark}-->
+<!--         		where id = #{id}-->
+<!--    </update>-->
+</mapper>

@@ -1,0 +1,12 @@
+com\wanglong\service\CheckItemService.class
+com\wanglong\service\UserService.class
+com\wanglong\service\RoomTypeService.class
+com\wanglong\service\SetmealService.class
+com\wanglong\service\CheckGroupService.class
+com\wanglong\service\MemberService.class
+com\wanglong\service\OrderSettingService.class
+com\wanglong\service\RoomService.class
+com\wanglong\service\OrderService.class
+com\wanglong\service\ReportService.class
+com\wanglong\service\AccountService.class
+com\wanglong\service\FloorService.class

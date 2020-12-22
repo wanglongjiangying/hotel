@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 页面meta -->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>传智健康</title>
+        <meta name="description" content="传智健康">
+        <meta name="keywords" content="传智健康">
+        <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+        <!-- 引入样式 -->
+        <link rel="stylesheet" href="../plugins/elementui/index.css">
+        <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../css/style.css">
+        <!-- 引入组件库 -->
+        <script type="text/javascript" src="../js/jquery.min.js"></script>
+        <script src="../js/vue.js"></script>
+        <script src="../plugins/elementui/index.js"></script>
+        <script src="../js/axios-0.18.0.js"></script>
+        <style>
+            .avatar-uploader .el-upload {
+                border: 1px dashed #d9d9d9;
+                border-radius: 6px;
+                cursor: pointer;
+                position: relative;
+                overflow: hidden;
+            }
+            .avatar-uploader .el-upload:hover {
+                border-color: #409EFF;
+            }
+            .avatar-uploader-icon {
+                font-size: 28px;
+                color: #8c939d;
+                width: 178px;
+                height: 178px;
+                line-height: 178px;
+                text-align: center;
+            }
+            .avatar {
+                width: 178px;
+                height: 178px;
+                display: block;
+            }
+            .datatable {
+                position: relative;
+                box-sizing: border-box;
+                -webkit-box-flex: 1;
+                width: 100%;
+                max-width: 100%;
+                font-size: 14px;
+                color: rgb(96, 98, 102);
+                overflow: hidden;
+                flex: 1 1 0%;
+            }
+            .datatable td, .datatable th {
+                padding: 12px 0;
+                min-width: 0;
+                -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+                text-overflow: ellipsis;
+                vertical-align: middle;
+                position: relative;
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body class="hold-transition">
+        <div id="app">
+            <div class="content-header">
+                <h1>预约管理<small>套餐管理</small></h1>
+                <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+                    <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                    <el-breadcrumb-item>预约管理</el-breadcrumb-item>
+                    <el-breadcrumb-item>套餐管理</el-breadcrumb-item>
+                </el-breadcrumb>
+            </div>
+            <div class="app-container">
+                <div class="box">
+                    <div class="filter-container">
+                        <el-input placeholder="房型名称" v-model="pagination.queryString" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter"></el-input>
+                        <el-button @click="_findPage()" class="dalfBut">查询</el-button>
+                        <el-button type="primary" class="butT" @click="handleCreate()">新建</el-button>
+                    </div>
+                    <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
+                        <el-table-column type="index" align="center" label="序号"></el-table-column>
+                        <el-table-column prop="name" label="名称" align="center"></el-table-column>
+                        <el-table-column prop="price" label="价格" align="center"></el-table-column>
+                        <el-table-column prop="bedNum" label="床位数" align="center"></el-table-column>
+                        <el-table-column prop="roomNum" label="总数" align="center"></el-table-column>
+                     <!--   <el-table-column prop="liveNum" label="可住人数" align="center"></el-table-column>
+                        <el-table-column prop="avilableNum" label="可预定" align="center"></el-table-column>
+                        <el-table-column prop="bookNum" label="已预定" align="center"></el-table-column>-->
+                        <el-table-column prop="livedNum" label="已入住" align="center"></el-table-column>
+                        <el-table-column prop="bookNum" label="预定数" align="center"></el-table-column>
+                        <el-table-column prop="remark" label="说明" align="center"></el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="scope">
+                                <el-button type="primary" size="mini"  @click="handleUpdate(scope.row)" >编辑</el-button>
+                                <el-button size="mini" type="danger "@click="handleDelete(scope.row)">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="pagination-container">
+                        <el-pagination
+                            class="pagiantion"
+                            @current-change="handleCurrentChange"
+                            :current-page="pagination.currentPage"
+                            :page-size="pagination.pageSize"
+                            layout="total, prev, pager, next, jumper"
+                            :total="pagination.total">
+                        </el-pagination>
+                    </div>
+                    <!-- 新增标签弹层 -->
+                    <div class="add-form">
+                        <el-dialog title="新增房型" :visible.sync="dialogFormVisible">
+                            <template>
+                                <el-tabs v-model="activeName" type="card">
+                                    <el-tab-pane label="基本信息" name="first">
+                                        <el-form label-position="right" label-width="100px">
+                                            <el-row>
+                                                <el-col :span="12">
+                                                    <el-form-item label="名称">
+                                                        <el-input v-model="formData.name"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                                <el-col :span="12">
+                                                    <el-form-item label="价格">
+                                                        <el-input v-model="formData.price"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row>
+                                                <el-col :span="12">
+                                                    <el-form-item label="床位数">
+                                                        <el-input v-model="formData.bedNum"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                                <el-col :span="12">
+                                                    <el-form-item label="总数">
+                                                        <el-input v-model="formData.roomNum"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row>
+                                                <el-col :span="12">
+                                                    <el-form-item label="可住人数">
+                                                        <el-input v-model="formData.liveNum"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                          <!--  <el-row>
+                                                <el-col :span="24">
+                                                    <el-form-item label="上传图片">
+                                                        <el-upload
+                                                                class="avatar-uploader"
+                                                                action="/setmeal/upload.do"
+                                                                :auto-upload="autoUpload"
+                                                                name="imgFile"
+                                                                :show-file-list="false"
+                                                                :on-success="handleAvatarSuccess"
+                                                                :before-upload="beforeAvatarUpload">
+                                                            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                                                            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                                                        </el-upload>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>-->
+                                            <el-row>
+                                                <el-col :span="24">
+                                                    <el-form-item label="说明">
+                                                        <el-input v-model="formData.remark" type="textarea"></el-input>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                        </el-form>
+                                    </el-tab-pane>
+                                </el-tabs>
+                            </template>
+                            <div slot="footer" class="dialog-footer">
+                                <el-button @click="dialogFormVisible = false">取消</el-button>
+                                <el-button type="primary" @click="handleAdd()">确定</el-button>
+                            </div>
+                        </el-dialog>
+                    </div>
+
+                    <!-- 编辑标签弹层 -->
+                    <div class="add-form">
+                        <el-dialog title="编辑房型" :visible.sync="dialogFormVisible4Edit">
+                            <template>
+                                <el-tabs v-model="activeName" type="card">
+                                    <el-tab-pane label="基本信息" name="first">
+                                        <el-form label-position="right" label-width="100px">
+                                            <el-row>
+                                                <el-col :span="12">
+                                                    <el-form-item label="名称">
+                                                        <el-input v-model="formData.name"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                                <el-col :span="12">
+                                                    <el-form-item label="价格">
+                                                        <el-input v-model="formData.price"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row>
+                                                <el-col :span="12">
+                                                    <el-form-item label="床位数">
+                                                        <el-input v-model="formData.bedNum"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                                <el-col :span="12">
+                                                    <el-form-item label="总数">
+                                                        <el-input v-model="formData.roomNum"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row>
+                                                <el-col :span="12">
+                                                    <el-form-item label="可住人数">
+                                                        <el-input v-model="formData.liveNum"/>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                            <!--  <el-row>
+                                                  <el-col :span="24">
+                                                      <el-form-item label="上传图片">
+                                                          <el-upload
+                                                                  class="avatar-uploader"
+                                                                  action="/setmeal/upload.do"
+                                                                  :auto-upload="autoUpload"
+                                                                  name="imgFile"
+                                                                  :show-file-list="false"
+                                                                  :on-success="handleAvatarSuccess"
+                                                                  :before-upload="beforeAvatarUpload">
+                                                              <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                                                              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                                                          </el-upload>
+                                                      </el-form-item>
+                                                  </el-col>
+                                              </el-row>-->
+                                            <el-row>
+                                                <el-col :span="24">
+                                                    <el-form-item label="说明">
+                                                        <el-input v-model="formData.remark" type="textarea"></el-input>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                        </el-form>
+                                    </el-tab-pane>
+                                </el-tabs>
+                            </template>
+                            <div slot="footer" class="dialog-footer">
+                                <el-button @click="dialogFormVisible = false">取消</el-button>
+                                <el-button type="primary" @click="handleEdit()">确定</el-button>
+                            </div>
+                        </el-dialog>
+                    </div>
+
+
+
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script>
+        var vue = new Vue({
+            el: '#app',
+            data:{
+                autoUpload:true,//自动上传
+                imageUrl:null,//模型数据，用于上传图片完成后图片预览
+                activeName:'first',//添加/编辑窗口Tab标签名称
+                pagination: {//分页相关属性
+                    currentPage: 1,
+                    pageSize:10,
+                    total:100,
+                    queryString:null,
+                },
+                dataList: [],//列表数据
+                formData: {},//表单数据
+                tableData:[],//添加表单窗口中检查组列表数据
+                checkgroupIds:[],//添加表单窗口中检查组复选框对应id
+                dialogFormVisible: false,//控制添加窗口显示/隐藏
+                dialogFormVisible4Edit: false,//控制编辑窗口显示/隐藏
+                storeImage:null   //临时存储查询出来的图片的名称，编辑时发送到回台进行比较图片是否更换
+            },
+            created() {
+                this.findPage();
+            },
+            methods: {
+
+                //编辑
+                handleEdit(){
+                    axios.post("/roomType/updateRoomType.do",this.formData).then((resp)=>{
+                        if(resp.data.flag){
+                            this.$message.success(resp.data.message);
+                            this._findPage();
+
+                        }else{
+                            this.$message.error(resp.data.message);
+                        }
+                    }).finally(()=>{
+                        this.dialogFormVisible4Edit=false;
+                    })
+                },
+
+                //删除
+                handleDelete(row){
+                    axios.get("/roomType/deleteById.do?id="+row.id).then((resp)=>{
+                        if(resp.data.flag){
+                            this.$message.success(resp.data.message);
+                            this._findPage();
+                        }else{
+                            this.$message.error(resp.data.message);
+                        }
+                    });
+
+                },
+                handleUpdate(row){
+                    //1.设置弹出窗口
+                    this.dialogFormVisible4Edit=true;
+                    this.activeName='first';
+                    // //2.把用户以前的照片临时存储起来
+                    // this.storeImage=row.img;
+                    //3.回显数据
+                        this.formData=row;
+                        //this.imageUrl= this.imageUrl="http://qcu15wv5c.bkt.clouddn.com/"+row.img;
+                        // //查询所有的检查组数据
+                        // axios.get("/checkGroup/findAll.do").then((resp)=>{
+                        //     this.tableData=resp.data.data;
+                        // });
+                        //根据套餐id查询出复选框中的选中的检查组id
+                        // axios.get("/setmeal/findCheckGroupIdsBySetmealId.do?setmealId="+row.id).then((resp)=>{
+                        //     if(resp.data.flag){//查询成功显示数据
+                        //         this.checkgroupIds=resp.data.data;
+                        //     }else{
+                        //         this.$message.error(resp.data.message);
+                        //     }
+                        // });
+
+                },
+
+
+                //
+                // //文件上传成功后的钩子，response为服务端返回的值，file为当前上传的文件封装成的js对象
+                // handleAvatarSuccess(response, file) {
+                //     if (response.flag){//上传成功
+                //         this.imageUrl="http://qcu15wv5c.bkt.clouddn.com/"+response.data;
+                //         this.$message.success(response.message);
+                //         this.formData.img=response.data;
+                //     }else{
+                //         this.$message.error(response.message);
+                //     }
+                // },
+                //上传图片之前执行
+                beforeAvatarUpload(file) {
+				  const isJPG = file.type === 'image/jpeg';
+				  const isLt2M = file.size / 1024 / 1024 < 2;
+				  if (!isJPG) {
+					this.$message.error('上传套餐图片只能是 JPG 格式!');
+					return ;
+				  }
+				  if (!isLt2M) {
+					this.$message.error('上传套餐图片大小不能超过 2MB!');
+					return ;
+				  }
+				  return isJPG && isLt2M;
+                },
+
+                //添加
+                handleAdd () {
+                    axios.post("/roomType/add.do",this.formData).then((resp)=>{
+
+                       if(resp.data.flag){
+                           this.$message.success(resp.data.message);
+                           this.findPage();
+                       }else{
+                           this.$message.error(resp.data.message);
+                       }
+                    }).finally(()=>{
+                        this.dialogFormVisible=false;//关闭窗口
+                    });
+
+                },
+
+                _findPage(){
+                    this.pagination.currentPage=1;
+                    this.findPage();
+                },
+
+                //分页查询
+                findPage() {
+                        var param={
+                            currentPage:this.pagination.currentPage,
+                            pageSize: this.pagination.pageSize,
+                            queryString: this.pagination.queryString
+                        };
+                        axios.post("/roomType/findByPage.do",param).then((resp)=>{
+                            this.dataList=resp.data.rows;
+                            this.pagination.total=resp.data.total;
+                        })
+                },
+                // 重置表单
+                resetForm() {
+                    this.formData={};
+                    this.tableData=[];
+                    this.checkgroupIds=[];
+                    this.activeName='first';
+                    this.imageUrl=null;
+                },
+                // 弹出添加窗口
+                handleCreate() {
+                    this.dialogFormVisible=true;
+                    this.resetForm();
+                    axios.get("/checkGroup/findAll.do").then((resp)=>{
+                        this.tableData=resp.data.data;
+                    });
+                },
+                //切换页码
+                handleCurrentChange(currentPage) {
+
+                    this.pagination.currentPage=currentPage;
+                    this.findPage();
+                }
+            }
+        })
+    </script>
+</html>

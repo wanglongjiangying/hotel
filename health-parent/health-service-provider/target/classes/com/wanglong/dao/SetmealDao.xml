@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wanglong.dao.SetmealDao">
+
+    <resultMap id="setmealMap" type="com.wanglong.pojo.Setmeal">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+        <result property="helpCode" column="helpCode"/>
+        <result property="sex" column="sex"/>
+        <result property="age" column="age"/>
+        <result property="price" column="price"/>
+        <result property="remark" column="remark"/>
+        <result property="attention" column="attention"/>
+        <result property="img" column="img"/>
+
+        <collection property="checkGroups"
+                    ofType="com.wanglong.pojo.CheckGroup"
+                    select="com.wanglong.dao.CheckGroupDao.findCheckGroupBySetmealId"
+                    column="id">
+        </collection>
+    </resultMap>
+
+    <insert id="add" parameterType="com.wanglong.pojo.Setmeal">
+        <selectKey resultType="Integer" keyColumn="id" keyProperty="id" order="AFTER">
+            select last_insert_id();
+        </selectKey>
+          insert into t_setmeal(code,name,sex,age,price,helpCode,remark,attention,img)
+                      values
+        (#{code},#{name},#{sex},#{age},#{price},#{helpCode},#{remark},#{attention},#{img})
+    </insert>
+
+    <insert id="addSetmealAndGroup" parameterType="map">
+        insert into t_setmeal_checkgroup (setmeal_id,checkgroup_id) values(#{setmealId},#{groupId})
+    </insert>
+
+    <select id="findByPage" parameterType="string" resultType="com.wanglong.pojo.Setmeal">
+        select * from t_setmeal
+        <if test="value!=null and value.length>0">
+            where name like '%${value}%' or code like '%${value}%' or helpCode like '%${value}%'
+        </if>
+    </select>
+
+    <delete id="deleteByImg" parameterType="string">
+            delete from t_setmeal where img=#{img}
+    </delete>
+
+    <delete id="deleteSetmealAndGroup" parameterType="int">
+        delete from t_setmeal_checkgroup where setmeal_id=#{id}
+    </delete>
+
+    <select id="findCheckGroupIdsBySetmealId" parameterType="int" resultType="int">
+        select checkgroup_id from t_setmeal_checkgroup where setmeal_id=#{setmealId}
+    </select>
+
+    <update id="edit" parameterType="com.wanglong.pojo.Setmeal">
+         update t_setmeal set code=#{code},name=#{name},sex=#{sex},helpCode=#{helpCode},
+          remark=#{remark},attention=#{attention},age=#{age},price=#{price},img=#{img}
+                where id=#{id}
+    </update>
+
+    <select id="findAll" resultType="com.wanglong.pojo.Setmeal">
+        select * from t_setmeal
+    </select>
+
+
+    <select id="findbyId" parameterType="Integer" resultMap="setmealMap">
+        select * from t_setmeal where id=#{id}
+    </select>
+
+    <select id="findSetmealCount" resultType="map">
+        SELECT s.name, COUNT(o.`setmeal_id`) AS value
+	         FROM t_order o,t_setmeal s
+	            WHERE o.`setmeal_id`=s.id GROUP BY o.`setmeal_id`;
+    </select>
+
+    <select id="hotSetmeal" resultType="map">
+        SELECT s.`name`,
+          COUNT(o.`setmeal_id`) setmeal_count,
+          COUNT(o.`setmeal_id`)/(SELECT COUNT(id) FROM t_order) proportion
+        FROM t_order o,t_setmeal s
+        WHERE o.`setmeal_id`=s.`id`
+          GROUP BY o.`setmeal_id`
+          ORDER BY COUNT(o.`setmeal_id`)
+          DESC LIMIT 3;
+    </select>
+
+</mapper>

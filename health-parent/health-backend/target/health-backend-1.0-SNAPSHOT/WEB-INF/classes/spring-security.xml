@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/security
+    http://www.springframework.org/schema/security/spring-security.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+
+    <!--配置哪些资源可以匿名访问-->
+    <security:http security="none" pattern="/login.html"/>
+    <security:http security="none" pattern="/css/**"/>
+    <security:http security="none" pattern="/js/**"/>
+    <security:http security="none" pattern="/plugins/**"/>
+    <security:http security="none" pattern="/img/**"/>
+
+    <security:http auto-config="true" use-expressions="true">
+
+        <security:headers>
+            <!--设置在页面可以通过iframe访问受保护的页面，默认为不允许访问-->
+            <security:frame-options policy="SAMEORIGIN"></security:frame-options>
+        </security:headers>
+
+        <!-- 配置具体的拦截的规则 pattern="请求路径的规则" access="访问系统的人，必须有ROLE_ADMIN或者ROLE_HEALTH_MANAGER的角色" -->
+        <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_ADMIN,ROLE_HEALTH_MANAGER')"/>
+
+
+
+        <!--使用自定义的登录页面-->
+        <security:form-login login-page="/login.html"
+                             login-processing-url="/login.do"
+                             username-parameter="username"
+                             password-parameter="password"
+                             authentication-failure-url="/login.html"
+                             default-target-url="/pages/main.html"/>
+
+        <!--  csrf：对应CsrfFilter过滤器
+                    disabled：是否启用CsrfFilter过滤器，如果使用自定义登录页面需要关闭此项，
+                     \否则登录操作会被禁 用（403） -->
+        <security:csrf disabled="true"/>
+        <!--退出-->
+        <security:logout logout-success-url="/login.html" logout-url="/logout.do" invalidate-session="true"/>
+    </security:http>
+
+    <!--配置认证管理器-->
+    <security:authentication-manager>
+        <!--认证的提供者-->
+        <security:authentication-provider user-service-ref="springSecurityUserService">
+           <!--配置密码的加密方式-->
+            <security:password-encoder ref="bCryptPasswordEncoder"/>
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+    <!--配置密码加密类-->
+    <bean id="bCryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+    <!--再该类上使用注解@Component已经交给spring容器，
+    <bean id="securityUserService" class="com.wanglong.service.SpringSecurityUserService"/>
+    -->
+
+
+    <!--开启注解权限控制-->
+   <!-- <security:global-method-security pre-post-annotations="enabled"/>-->
+
+    <security:global-method-security pre-post-annotations="enabled"></security:global-method-security>
+
+    <mvc:annotation-driven></mvc:annotation-driven>
+
+    <context:component-scan base-package="com.wanglong.controller"></context:component-scan>
+
+
+</beans>

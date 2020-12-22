@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wanglong.dao.CheckItemDao">
+
+    <insert id="add" parameterType="com.wanglong.pojo.CheckItem">
+          insert into t_checkitem(code,name,sex,age,price,type,remark,attention)
+                      values
+        (#{code},#{name},#{sex},#{age},#{price},#{type},#{remark},#{attention})
+    </insert>
+
+    <select id="findByPage" parameterType="java.lang.String" resultType="com.wanglong.pojo.CheckItem">
+        select * from t_checkitem
+        <if test="value!=null and value.length>0">
+            where code like '%${value}%' or name like '%${value}%'
+        </if>
+    </select>
+
+    <select id="findCountByCheckItemId" parameterType="java.lang.Integer" resultType="Integer">
+        select count(*) from t_checkgroup_checkitem  where checkitem_id=#{id}
+    </select>
+
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        delete from t_checkitem where id=#{id}
+    </delete>
+
+    <update id="updateCheckItem" parameterType="com.wanglong.pojo.CheckItem">
+        update t_checkitem set code=#{code},name=#{name},sex=#{sex},age=#{age},price=#{price},
+                type=#{type},remark=#{remark},attention=#{attention}
+                where id=#{id}
+    </update>
+
+    <select id="findAll" resultType="com.wanglong.pojo.CheckItem">
+        select * from t_checkitem
+    </select>
+
+    <select id="findCheckItemByCheckGroupId" parameterType="Integer"
+            resultType="com.wanglong.pojo.CheckItem">
+
+       select * from t_checkitem where id in
+         (select checkitem_id from t_checkgroup_checkitem where checkgroup_id=#{id})
+    </select>
+
+</mapper>

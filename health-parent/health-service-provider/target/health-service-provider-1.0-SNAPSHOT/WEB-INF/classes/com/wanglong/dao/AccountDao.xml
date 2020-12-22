@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wanglong.dao.AccountDao">
+
+    <select id="findAccountByPage" parameterType="Map" resultType="com.wanglong.pojo.Account">
+        select * from t_account
+        <where>
+            <if test="status !=null">
+                    status = #{status}
+            </if>
+            <if test="queryString !=null and queryString.length>0">
+               and  username like '%${queryString}%' or realName like '%${queryString}%'
+                or idCard = #{queryString} or mobile = #{queryString}
+            </if>
+
+
+        </where>
+
+    </select>
+
+    <insert id="add" parameterType="com.wanglong.pojo.Account">
+        insert  into t_account
+       (username,password,realName,idCard
+        <if test="address !=null"> , mobile </if>
+       <if test="address !=null"> , address </if>
+        <if test="address !=null"> , status </if>
+       )
+       values (#{username},#{password},#{realName},#{idCard}
+        <if test="address !=null"> , #{mobile} </if>
+        <if test="address !=null"> , #{address} </if>
+        <if test="address !=null"> , #{status} </if>
+       )
+    </insert>
+
+    <delete id="deleteById" parameterType="int">
+        update  t_account set status = "-1" where id = #{id}
+    </delete>
+
+    <update id="updateAccount" parameterType="com.wanglong.pojo.Account">
+        update t_account set
+        username = #{username},password = #{password},realName = #{realName},
+        mobile = #{mobile},address = #{address}, status = #{status}
+        where id = #{id}
+    </update>
+
+    <select id="findById" parameterType="int"  resultType="com.wanglong.pojo.Account">
+        select * from t_account where id = #{account_id}
+    </select>
+
+<!--    <select id="findAll" resultType="com.wanglong.pojo.Floor">-->
+<!--        select * from t_floor-->
+<!--    </select>-->
+</mapper>
